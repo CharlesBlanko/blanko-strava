@@ -1,0 +1,185 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { StravaAPI } from '../lib/strava';
+import { SessionManager } from '../lib/session';
+
+const strava = new StravaAPI();
+
+function getSessionId(request: Request): string | null {
+  const cookies = request.headers.get('cookie');
+  if (!cookies) return null;
+  
+  const sessionIdMatch = cookies.match(/sessionId=([^;]+)/);
+  return sessionIdMatch ? sessionIdMatch[1] : null;
+}
+
+const sessionId = getSessionId(Astro.request);
+console.log('Session ID from cookie:', sessionId);
+const session = sessionId ? SessionManager.getSession(sessionId) : null;
+console.log('Session data:', session);
+let isClubMember = false;
+let athleteName = '';
+
+if (session && !SessionManager.isTokenExpired(sessionId)) {
+  isClubMember = session.isClubMember;
+  athleteName = `${session.athlete.firstname} ${session.athlete.lastname}`;
+  console.log('User is club member:', isClubMember);
+} else {
+  console.log('No valid session found');
+}
+---
+
+<Layout title="Strava Club Tracker">
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Strava Club Tracker</h1>
+            <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
+              Club Blanko
+            </span>
+          </div>
+          {session ? (
+            <div class="flex items-center space-x-4">
+              <span class="text-sm text-gray-600">
+                Connecté en tant que {athleteName}
+              </span>
+              <form action="/logout" method="post">
+                <button 
+                  type="submit"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                >
+                  Déconnexion
+                </button>
+              </form>
+            </div>
+          ) : (
+            <a 
+              href={strava.getAuthUrl()}
+              class="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            >
+              Connexion Strava
+            </a>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {!session ? (
+        <div class="text-center py-12">
+          <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+              <svg class="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M15.384 0C13.643 0 12.2 1.343 12.2 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM8.616 0C6.875 0 5.432 1.343 5.432 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12S0 5.373 0 12s5.373 12 12 12z"/>
+              </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">
+              Bienvenue sur le tracker du Club Blanko
+            </h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+              Connectez-vous avec votre compte Strava pour accéder aux statistiques détaillées du club.
+              Seuls les membres du club peuvent voir les données.
+            </p>
+          </div>
+          
+          <a 
+            href={strava.getAuthUrl()}
+            class="inline-flex items-center px-6 py-3 text-lg font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+          >
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M15.384 0C13.643 0 12.2 1.343 12.2 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM8.616 0C6.875 0 5.432 1.343 5.432 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12S0 5.373 0 12s5.373 12 12 12z"/>
+            </svg>
+            Se connecter avec Strava
+          </a>
+        </div>
+      ) : !isClubMember ? (
+        <div class="text-center py-12">
+          <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">
+              Accès non autorisé
+            </h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+              Vous n'êtes pas membre du Club Blanko. Seuls les membres du club peuvent accéder aux statistiques.
+            </p>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+              <p class="text-sm text-yellow-800">
+                <strong>Debug info:</strong><br/>
+                Session ID: {sessionId}<br/>
+                Session exists: {session ? 'Oui' : 'Non'}<br/>
+                Club member: {isClubMember ? 'Oui' : 'Non'}
+              </p>
+            </div>
+          </div>
+          
+          <form action="/logout" method="post">
+            <button 
+              type="submit"
+              class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            >
+              Se déconnecter
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div>
+          <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              Tableau de bord du Club Blanko
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <a 
+                href="/members"
+                class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+              >
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                  </div>
+                  <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Statistiques des membres</h3>
+                    <p class="text-sm text-gray-500">Voir les statistiques individuelles</p>
+                  </div>
+                </div>
+              </a>
+              
+              <a 
+                href="/group"
+                class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+              >
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                  </div>
+                  <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Statistiques du groupe</h3>
+                    <p class="text-sm text-gray-500">Voir les statistiques cumulatives</p>
+                  </div>
+                </div>
+              </a>
+              
+              <div class="p-6 bg-white rounded-lg shadow-sm border">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                  </div>
+                  <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">En direct</h3>
+                    <p class="text-sm text-gray-500">Dernières activités du club</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  </div>
+</Layout>

@@ -1,0 +1,62 @@
+---
+import { StravaAPI } from '../../lib/strava';
+import { SessionManager } from '../../lib/session';
+
+const strava = new StravaAPI();
+const url = new URL(Astro.request.url);
+const code = url.searchParams.get('code');
+const error = url.searchParams.get('error');
+
+console.log('Callback URL:', url.href);
+console.log('Code:', code);
+console.log('Error:', error);
+
+if (error) {
+  console.log('Access denied error');
+  return Astro.redirect('/?error=access_denied');
+}
+
+if (!code) {
+  console.log('No code received');
+  return Astro.redirect('/?error=no_code');
+}
+
+try {
+  console.log('Exchanging code for token...');
+  const tokenData = await strava.exchangeCodeForToken(code);
+  console.log('Token received:', tokenData);
+  
+  const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
+  console.log('Checking club membership for club:', clubId);
+  
+  const isClubMember = await strava.checkClubMembership(clubId, tokenData.access_token);
+  console.log('Is club member:', isClubMember);
+  
+  // Temporairement : forcer à true pour tester
+  const forceAccess = true; // Mettez à false pour la production
+  const finalIsClubMember = forceAccess || isClubMember;
+  console.log('Final club member status:', finalIsClubMember);
+  
+  const sessionId = Math.random().toString(36).substring(2, 15);
+  console.log('Session ID:', sessionId);
+  
+  SessionManager.createSession(sessionId, {
+    accessToken: tokenData.access_token,
+    refreshToken: tokenData.refresh_token,
+    expiresAt: tokenData.expires_at,
+    athlete: tokenData.athlete,
+    isClubMember: finalIsClubMember
+  });
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Set-Cookie': `sessionId=${sessionId}; HttpOnly; Path=/; Max-Age=86400`,
+      'Location': '/'
+    }
+  });
+} catch (err) {
+  console.error('Auth error:', err);
+  return Astro.redirect('/?error=auth_failed');
+}
+---

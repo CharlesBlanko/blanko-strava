@@ -1,0 +1,28 @@
+---
+import { SessionManager } from '../../lib/session';
+
+function getSessionId(request: Request): string | null {
+  const cookies = request.headers.get('cookie');
+  if (!cookies) return null;
+  
+  const sessionIdMatch = cookies.match(/sessionId=([^;]+)/);
+  return sessionIdMatch ? sessionIdMatch[1] : null;
+}
+
+const sessionId = getSessionId(Astro.request);
+
+if (sessionId) {
+  SessionManager.deleteSession(sessionId);
+}
+
+const headers = new Headers();
+headers.append('Set-Cookie', 'sessionId=; HttpOnly; Path=/; Max-Age=0');
+
+return new Response(null, {
+  status: 302,
+  headers: {
+    ...headers,
+    'Location': '/'
+  }
+});
+---

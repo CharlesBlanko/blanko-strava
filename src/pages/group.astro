@@ -1,0 +1,298 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { StravaAPI } from '../lib/strava';
+import { SessionManager } from '../lib/session';
+import { calculateGroupStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
+
+function getSessionId(request: Request): string | null {
+  const cookies = request.headers.get('cookie');
+  if (!cookies) return null;
+  
+  const sessionIdMatch = cookies.match(/sessionId=([^;]+)/);
+  return sessionIdMatch ? sessionIdMatch[1] : null;
+}
+
+const sessionId = getSessionId(Astro.request);
+const session = sessionId ? SessionManager.getSession(sessionId) : null;
+
+if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMember) {
+  return Astro.redirect('/');
+}
+
+const url = new URL(Astro.request.url);
+const period = url.searchParams.get('period') || 'allTime';
+
+const strava = new StravaAPI();
+const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
+
+let groupStats = null;
+let error = null;
+
+try {
+  const activities = await strava.getClubActivities(clubId, session.accessToken);
+  groupStats = calculateGroupStats(activities);
+} catch (err) {
+  error = err.message;
+  console.error('Error fetching group stats:', err);
+}
+---
+
+<Layout title="Statistiques du groupe - Strava Club Tracker">
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <a href="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600">
+              Strava Club Tracker
+            </a>
+            <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
+              Club Blanko
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <a href="/" class="text-sm text-gray-600 hover:text-gray-900">
+              Retour à l'accueil
+            </a>
+            <form action="/logout" method="post">
+              <button 
+                type="submit"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                Déconnexion
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-3xl font-bold text-gray-900">Statistiques cumulatives du groupe</h1>
+          
+          <div class="flex items-center space-x-4">
+            <label class="text-sm font-medium text-gray-700">Période:</label>
+            <select 
+              id="period-select"
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              onchange="window.location.href = `/group?period=${this.value}`"
+            >
+              <option value="weekly" selected={period === 'weekly'}>Cette semaine</option>
+              <option value="monthly" selected={period === 'monthly'}>Ce mois</option>
+              <option value="yearly" selected={period === 'yearly'}>Cette année</option>
+              <option value="allTime" selected={period === 'allTime'}>Depuis toujours</option>
+            </select>
+          </div>
+        </div>
+
+        {error ? (
+          <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Erreur</h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : groupStats ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-500">Distance totale</p>
+                  <p class="text-2xl font-bold text-gray-900">
+                    {formatDistance(groupStats[period].distance)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-500">Temps d'activité</p>
+                  <p class="text-2xl font-bold text-gray-900">
+                    {formatTime(groupStats[period].movingTime)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-500">Calories dépensées</p>
+                  <p class="text-2xl font-bold text-gray-900">
+                    {groupStats[period].calories.toLocaleString()} kcal
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-500">Dénivelé positif</p>
+                  <p class="text-2xl font-bold text-gray-900">
+                    {formatElevation(groupStats[period].elevationGain)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Détails par période</h2>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Période
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Distance
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Temps d'activité
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Calories
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Dénivelé positif
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Membres actifs
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Cette semaine
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDistance(groupStats.weekly.distance)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatTime(groupStats.weekly.movingTime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {groupStats.weekly.calories.toLocaleString()} kcal
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatElevation(groupStats.weekly.elevationGain)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {groupStats.weekly.memberCount}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Ce mois
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDistance(groupStats.monthly.distance)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatTime(groupStats.monthly.movingTime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {groupStats.monthly.calories.toLocaleString()} kcal
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatElevation(groupStats.monthly.elevationGain)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {groupStats.monthly.memberCount}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Cette année
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDistance(groupStats.yearly.distance)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatTime(groupStats.yearly.movingTime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {groupStats.yearly.calories.toLocaleString()} kcal
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatElevation(groupStats.yearly.elevationGain)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {groupStats.yearly.memberCount}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50 bg-orange-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-900">
+                      Depuis toujours
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-900">
+                      {formatDistance(groupStats.allTime.distance)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-900">
+                      {formatTime(groupStats.allTime.movingTime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-900">
+                      {groupStats.allTime.calories.toLocaleString()} kcal
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-900">
+                      {formatElevation(groupStats.allTime.elevationGain)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-900">
+                      {groupStats.allTime.memberCount}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div class="text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Chargement des statistiques...</h3>
+            <p class="text-gray-500">Veuillez patienter pendant que nous récupérons les données du club.</p>
+          </div>
+        )}
+      </div>
+    </main>
+  </div>
+</Layout>
