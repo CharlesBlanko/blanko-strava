@@ -21,6 +21,19 @@ if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMembe
 
 const url = new URL(Astro.request.url);
 const period = url.searchParams.get('period') || 'allTime';
+const sortBy = url.searchParams.get('sortBy') || 'name';
+const sortOrder = url.searchParams.get('sortOrder') || 'asc';
+
+// Fonctions utilitaires pour les URLs de tri
+function getSortUrl(column: string): string {
+  const newSortOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
+  return `/members?period=${period}&sortBy=${column}&sortOrder=${newSortOrder}`;
+}
+
+function getSortIcon(column: string): string {
+  if (sortBy !== column) return '';
+  return sortOrder === 'asc' ? '↑' : '↓';
+}
 
 const strava = new StravaAPI();
 const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
@@ -53,6 +66,43 @@ try {
     };
   });
   console.log('=== Members page data fetch completed ===');
+  
+  // Tri des membres
+  membersStats.sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case 'name':
+        aValue = `${a.firstname} ${a.lastname}`.toLowerCase();
+        bValue = `${b.firstname} ${b.lastname}`.toLowerCase();
+        break;
+      case 'distance':
+        aValue = a.stats[period].distance;
+        bValue = b.stats[period].distance;
+        break;
+      case 'time':
+        aValue = a.stats[period].movingTime;
+        bValue = b.stats[period].movingTime;
+        break;
+      case 'calories':
+        aValue = a.stats[period].calories;
+        bValue = b.stats[period].calories;
+        break;
+      case 'elevation':
+        aValue = a.stats[period].elevationGain;
+        bValue = b.stats[period].elevationGain;
+        break;
+      default:
+        aValue = `${a.firstname} ${a.lastname}`.toLowerCase();
+        bValue = `${b.firstname} ${b.lastname}`.toLowerCase();
+    }
+    
+    if (sortOrder === 'desc') {
+      return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+    } else {
+      return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+    }
+  });
 } catch (err) {
   error = err.message;
   console.error('Error fetching member stats:', err);
@@ -132,19 +182,34 @@ try {
                 <thead class="bg-gray-50">
                   <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Membre
+                      <a href={getSortUrl('name')} class="hover:text-orange-600 flex items-center">
+                        Membre
+                        <span class="ml-1">{getSortIcon('name')}</span>
+                      </a>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Distance
+                      <a href={getSortUrl('distance')} class="hover:text-orange-600 flex items-center">
+                        Distance
+                        <span class="ml-1">{getSortIcon('distance')}</span>
+                      </a>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Temps d'activité
+                      <a href={getSortUrl('time')} class="hover:text-orange-600 flex items-center">
+                        Temps d'activité
+                        <span class="ml-1">{getSortIcon('time')}</span>
+                      </a>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Calories
+                      <a href={getSortUrl('calories')} class="hover:text-orange-600 flex items-center">
+                        Calories
+                        <span class="ml-1">{getSortIcon('calories')}</span>
+                      </a>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Dénivelé positif
+                      <a href={getSortUrl('elevation')} class="hover:text-orange-600 flex items-center">
+                        Dénivelé positif
+                        <span class="ml-1">{getSortIcon('elevation')}</span>
+                      </a>
                     </th>
                   </tr>
                 </thead>
