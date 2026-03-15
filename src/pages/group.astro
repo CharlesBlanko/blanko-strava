@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { StravaAPI } from '../lib/strava';
+import { getCommunalActivities } from '../lib/database';
 import { SessionManager } from '../lib/session';
 import { calculateGroupStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
 
@@ -22,15 +22,25 @@ if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMembe
 const url = new URL(Astro.request.url);
 const period = url.searchParams.get('period') || 'allTime';
 
-const strava = new StravaAPI();
 const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
 
 let groupStats = null;
 let error = null;
 
 try {
-  const activities = await strava.getClubActivities(clubId, session.accessToken);
-  groupStats = calculateGroupStats(activities);
+  console.log('=== Starting group page data fetch ===');
+  
+  // Récupérer toutes les activités de la base commune
+  const activities = getCommunalActivities(clubId);
+  console.log('Communal activities found:', activities.length);
+  
+  if (activities.length > 0) {
+    groupStats = calculateGroupStats(activities);
+    console.log('Group stats calculated successfully');
+  } else {
+    console.log('No activities found in communal database');
+    error = 'Aucune activité trouvée dans la base de données. Veuillez synchroniser vos activités.';
+  }
 } catch (err) {
   error = err.message;
   console.error('Error fetching group stats:', err);
