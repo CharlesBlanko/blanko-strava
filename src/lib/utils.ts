@@ -110,17 +110,11 @@ export function calculateStats(activities: any[], athleteName: string): AthleteS
   if (hasDates) {
     const { weekStart, monthStart, yearStart } = getDateRanges();
     
-    // Filtrer par nom pour les activités du club
-    const weekly = activities.filter(a => 
-      new Date(a.start_date) >= weekStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
-    );
-    const monthly = activities.filter(a => 
-      new Date(a.start_date) >= monthStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
-    );
-    const yearly = activities.filter(a => 
-      new Date(a.start_date) >= yearStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
-    );
-    const allTime = activities.filter(a => `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName);
+    // Filtrer par période (les activités sont déjà filtrées par athlète)
+    const weekly = activities.filter(a => new Date(a.start_date) >= weekStart);
+    const monthly = activities.filter(a => new Date(a.start_date) >= monthStart);
+    const yearly = activities.filter(a => new Date(a.start_date) >= yearStart);
+    const allTime = activities;
 
     return {
       athleteId: 0,
@@ -131,9 +125,8 @@ export function calculateStats(activities: any[], athleteName: string): AthleteS
       allTime: sumActivities(allTime)
     };
   } else {
-    // Pas de dates disponibles : filtrer par nom et utiliser toutes les activités
-    const athleteActivities = activities.filter(a => `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName);
-    const stats = sumActivities(athleteActivities);
+    // Pas de dates disponibles : utiliser toutes les activités
+    const stats = sumActivities(activities);
     
     return {
       athleteId: 0,
@@ -154,8 +147,17 @@ export function calculateGroupStats(activities: any[]): GroupStats {
   const yearly = activities.filter(a => new Date(a.start_date) >= yearStart);
   const allTime = activities;
 
-  const getUniqueAthletes = (activities: any[]) => 
-    new Set(activities.map(a => a.athlete.id)).size;
+  const getUniqueAthletes = (activities: any[]) => {
+    const uniqueIds = new Set();
+    activities.forEach(a => {
+      if (a.athlete_id) {
+        uniqueIds.add(a.athlete_id);
+      } else if (a.athlete && a.athlete.id) {
+        uniqueIds.add(a.athlete.id);
+      }
+    });
+    return uniqueIds.size;
+  };
 
   return {
     weekly: {

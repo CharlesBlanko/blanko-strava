@@ -1,8 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { SessionManager } from '../lib/session';
-import { getStoredActivities, addActivities, getCommunalActivities, addActivitiesToCommunal } from '../lib/database';
 import { StravaAPI } from '../lib/strava';
+import { getCommunalActivities, addActivitiesToCommunal } from '../lib/database-optimized';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');

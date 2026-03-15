@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { StravaAPI } from '../lib/strava';
-import { SessionManager, getCachedData, setCachedData } from '../lib/session';
-import { getCommunalActivities } from '../lib/database';
+import { getCommunalActivities, getAthletes } from '../lib/database-optimized';
 import { calculateStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
+import { SessionManager, getCachedData, setCachedData } from '../lib/session';
+import { StravaAPI } from '../lib/strava';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');
@@ -47,30 +47,37 @@ async function fetchMembersData() {
   try {
     console.log('=== Starting members page data fetch ===');
     
-    // Récupérer toutes les activités de la base commune
+    // Récupérer toutes les activités et les athlètes
     const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
     const allCommunalActivities = getCommunalActivities(clubId);
+    const athletes = getAthletes();
     console.log('Communal activities found:', allCommunalActivities.length);
+    console.log('Athletes found:', athletes.length);
     
-    if (allCommunalActivities.length === 0) {
-      console.log('No activities in communal database');
+    if (allCommunalActivities.length === 0 || athletes.length === 0) {
+      console.log('No activities or athletes in database');
       return [];
     }
+    
+    // Créer un map des athlètes pour un accès rapide
+    const athletesMap = new Map();
+    athletes.forEach(athlete => {
+      athletesMap.set(athlete.id, athlete);
+    });
     
     // Extraire tous les athlètes uniques des activités
     const uniqueAthletes = new Map();
     allCommunalActivities.forEach(activity => {
-      if (activity.athlete) {
-        const athleteKey = `${activity.athlete.firstname} ${activity.athlete.lastname}`;
+      const athlete = athletesMap.get(activity.athlete_id);
+      if (athlete) {
+        const athleteKey = `${athlete.firstname} ${athlete.lastname}`;
         if (!uniqueAthletes.has(athleteKey)) {
           uniqueAthletes.set(athleteKey, {
-            id: activity.athlete.id,
-            firstname: activity.athlete.firstname,
-            lastname: activity.athlete.lastname,
-            username: activity.athlete.username || `${activity.athlete.firstname.toLowerCase()}_${activity.athlete.lastname.toLowerCase()}`,
-            profile: activity.athlete.profile_medium && activity.athlete.profile_medium.startsWith('http') 
-              ? activity.athlete.profile_medium 
-              : `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.athlete.firstname + '+' + activity.athlete.lastname)}&background=fc4c02&color=fff&size=128`
+            id: athlete.id,
+            firstname: athlete.firstname,
+            lastname: athlete.lastname,
+            username: athlete.username,
+            profile: athlete.profile_medium
           });
         }
       }
@@ -86,7 +93,14 @@ async function fetchMembersData() {
     // Calculer les stats pour chaque athlète
     membersStats = targetAthletes.map(athlete => {
       const athleteName = `${athlete.firstname} ${athlete.lastname}`;
-      const stats = calculateStats(allCommunalActivities, athleteName);
+      
+      // Filtrer les activités pour cet athlète en utilisant athlete_id
+      const athleteActivities = allCommunalActivities.filter(activity => 
+        activity.athlete_id === athlete.id
+      );
+      
+      // Utiliser la fonction calculateStats avec les activités filtrées
+      const stats = calculateStats(athleteActivities, athleteName);
       
       return {
         ...athlete,

@@ -1,8 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCommunalActivities } from '../lib/database';
-import { SessionManager } from '../lib/session';
+import { getCommunalActivities } from '../lib/database-optimized';
 import { calculateGroupStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
+import { SessionManager } from '../lib/session';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');

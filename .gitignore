@@ -26,4 +26,5 @@ Thumbs.db
 
 # Data files (database)
 src/data/activities.json
+src/data/athletes.json
 src/data/
