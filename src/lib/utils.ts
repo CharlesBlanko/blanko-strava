@@ -86,7 +86,11 @@ export function formatElevation(meters: number): string {
 export function getDateRanges() {
   const now = new Date();
   const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
+  
+  // Ajuster pour que la semaine commence le lundi (1 = lundi, 0 = dimanche)
+  const day = now.getDay();
+  const diff = day === 0 ? 6 : day - 1; // Si dimanche (0), reculer de 6 jours, sinon reculer de (jour-1) jours
+  weekStart.setDate(now.getDate() - diff);
   weekStart.setHours(0, 0, 0, 0);
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
