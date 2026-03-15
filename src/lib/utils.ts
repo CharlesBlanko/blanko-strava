@@ -100,27 +100,46 @@ export function getDateRanges() {
 }
 
 export function calculateStats(activities: any[], athleteName: string): AthleteStats {
-  const { weekStart, monthStart, yearStart } = getDateRanges();
+  // Vérifier si les activités ont des dates
+  const hasDates = activities.length > 0 && activities[0].start_date;
   
-  const weekly = activities.filter(a => 
-    new Date(a.start_date) >= weekStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
-  );
-  const monthly = activities.filter(a => 
-    new Date(a.start_date) >= monthStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
-  );
-  const yearly = activities.filter(a => 
-    new Date(a.start_date) >= yearStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
-  );
-  const allTime = activities.filter(a => `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName);
+  if (hasDates) {
+    const { weekStart, monthStart, yearStart } = getDateRanges();
+    
+    // Filtrer par nom pour les activités du club
+    const weekly = activities.filter(a => 
+      new Date(a.start_date) >= weekStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
+    );
+    const monthly = activities.filter(a => 
+      new Date(a.start_date) >= monthStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
+    );
+    const yearly = activities.filter(a => 
+      new Date(a.start_date) >= yearStart && `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName
+    );
+    const allTime = activities.filter(a => `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName);
 
-  return {
-    athleteId: 0, // Pas d'ID disponible
-    name: athleteName,
-    weekly: sumActivities(weekly),
-    monthly: sumActivities(monthly),
-    yearly: sumActivities(yearly),
-    allTime: sumActivities(allTime)
-  };
+    return {
+      athleteId: 0,
+      name: athleteName,
+      weekly: sumActivities(weekly),
+      monthly: sumActivities(monthly),
+      yearly: sumActivities(yearly),
+      allTime: sumActivities(allTime)
+    };
+  } else {
+    // Pas de dates disponibles : filtrer par nom et utiliser toutes les activités
+    const athleteActivities = activities.filter(a => `${a.athlete.firstname} ${a.athlete.lastname}` === athleteName);
+    const stats = sumActivities(athleteActivities);
+    
+    return {
+      athleteId: 0,
+      name: athleteName,
+      weekly: stats, // Mêmes stats pour toutes les périodes
+      monthly: stats,
+      yearly: stats,
+      allTime: stats
+    };
+  }
 }
 
 export function calculateGroupStats(activities: any[]): GroupStats {

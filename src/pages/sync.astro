@@ -1,0 +1,161 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SessionManager } from '../lib/session';
+import { getStoredActivities, addActivities, getCommunalActivities, addActivitiesToCommunal } from '../lib/database';
+import { StravaAPI } from '../lib/strava';
+
+function getSessionId(request: Request): string | null {
+  const cookies = request.headers.get('cookie');
+  if (!cookies) return null;
+  
+  const sessionIdMatch = cookies.match(/sessionId=([^;]+)/);
+  return sessionIdMatch ? sessionIdMatch[1] : null;
+}
+
+const sessionId = getSessionId(Astro.request);
+const session = sessionId ? SessionManager.getSession(sessionId) : null;
+
+if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMember) {
+  return Astro.redirect('/');
+}
+
+const strava = new StravaAPI();
+
+let syncStatus = '';
+let error = null;
+
+try {
+  console.log('=== Starting manual sync ===');
+  
+  // Récupérer les activités actuelles depuis Strava
+  const currentActivities = await strava.getAthleteActivities(session.accessToken);
+  console.log('Current activities from API:', currentActivities.length);
+  
+  // Récupérer les activités stockées dans la base commune
+  const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
+  const storedActivities = getCommunalActivities(clubId);
+  console.log('Stored communal activities:', storedActivities.length);
+  
+  // Détecter les nouvelles activités
+  const newActivities = currentActivities.filter(activity => 
+    !storedActivities.some(stored => stored.id === activity.id)
+  );
+  
+  console.log('New activities found:', newActivities.length);
+  
+  // Ajouter les informations complètes de l'athlète aux nouvelles activités
+  const enrichedActivities = newActivities.map(activity => ({
+    ...activity,
+    athlete: {
+      ...activity.athlete,
+      firstname: session.athlete.firstname,
+      lastname: session.athlete.lastname,
+      username: session.athlete.username || `${session.athlete.firstname.toLowerCase()}_${session.athlete.lastname.toLowerCase()}`,
+      profile_medium: session.athlete.profile
+    }
+  }));
+  
+  if (enrichedActivities.length > 0) {
+    console.log('Adding enriched activities to communal database...');
+    addActivitiesToCommunal(clubId, enrichedActivities);
+    syncStatus = `✅ ${enrichedActivities.length} nouvelles activités ajoutées à la base commune`;
+  } else {
+    console.log('No new activities found');
+    syncStatus = `ℹ️ Aucune nouvelle activité (${currentActivities.length} totales dans la base commune)`;
+  }
+  
+} catch (err) {
+  console.error('Sync error:', err);
+  error = err.message;
+  syncStatus = `❌ Erreur: ${err.message}`;
+}
+---
+
+<Layout title="Synchronisation - Strava Club Tracker">
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <a href="/members" class="text-2xl font-bold text-gray-900 hover:text-orange-600">
+              Strava Club Tracker
+            </a>
+            <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
+              Synchronisation
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <a href="/members" class="text-sm text-gray-600 hover:text-gray-900">
+              ← Retour aux membres
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-6 py-8">
+          <div class="text-center">
+            {error ? (
+              <div class="bg-red-50 border border-red-200 rounded-md p-6">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v12m0 4v-6m0 4h12a2 2 0 002-2v-4a2 2 0 002-2V7a2 2 0 002-2m0 4v12a2 2 0 002-2"/>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Erreur de synchronisation</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                      <p>{error}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div class="mb-8">
+                  <div class="flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-orange-600" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v2a2 2 0 012-2h16a2 2 0 012-2v-2m0 4v12a2 2 0 012-2M4 4v2a2 2 0 012-2h16a2 2 0 012-2v-2m0 4v12a2 2 0 012-2"/>
+                    </svg>
+                  </div>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                  Synchronisation des activités
+                </h2>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-6">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 012-2l6-6a2 2 0 012-2l6 6a2 2 0 012-2"/>
+                      </svg>
+                    </div>
+                    <div class="ml-3">
+                      <h3 class="text-sm font-medium text-blue-800">État de la synchronisation</h3>
+                      <div class="mt-2 text-sm text-blue-700">
+                        <p>{syncStatus}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mt-8">
+                  <a 
+                    href="/members" 
+                    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  >
+                    Retour aux statistiques
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</Layout>

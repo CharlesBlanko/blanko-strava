@@ -1,7 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { StravaAPI } from '../lib/strava';
-import { SessionManager } from '../lib/session';
+import { SessionManager, getCachedData, setCachedData } from '../lib/session';
+import { getCommunalActivities } from '../lib/database';
 import { calculateStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
 
 function getSessionId(request: Request): string | null {
@@ -16,7 +17,7 @@ const sessionId = getSessionId(Astro.request);
 const session = sessionId ? SessionManager.getSession(sessionId) : null;
 
 if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMember) {
-  return Astro.redirect('/');
+    return Astro.redirect('/');
 }
 
 const url = new URL(Astro.request.url);
@@ -41,72 +42,106 @@ const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
 let membersStats = [];
 let error = null;
 
-try {
-  console.log('=== Starting members page data fetch ===');
-  const activities = await strava.getClubActivities(clubId, session.accessToken);
-  console.log('Raw activities from club:', activities.length, 'activities');
-  
-  // Vérifions la structure des activités
-  if (activities.length > 0) {
-    console.log('First activity structure:', JSON.stringify(activities[0], null, 2));
-    console.log('Athlete in first activity:', activities[0].athlete);
+// Fonction principale async
+async function fetchMembersData() {
+  try {
+    console.log('=== Starting members page data fetch ===');
+    
+    // Récupérer toutes les activités de la base commune
+    const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
+    const allCommunalActivities = getCommunalActivities(clubId);
+    console.log('Communal activities found:', allCommunalActivities.length);
+    
+    if (allCommunalActivities.length === 0) {
+      console.log('No activities in communal database');
+      return [];
+    }
+    
+    // Extraire tous les athlètes uniques des activités
+    const uniqueAthletes = new Map();
+    allCommunalActivities.forEach(activity => {
+      if (activity.athlete) {
+        const athleteKey = `${activity.athlete.firstname} ${activity.athlete.lastname}`;
+        if (!uniqueAthletes.has(athleteKey)) {
+          uniqueAthletes.set(athleteKey, {
+            id: activity.athlete.id,
+            firstname: activity.athlete.firstname,
+            lastname: activity.athlete.lastname,
+            username: activity.athlete.username || `${activity.athlete.firstname.toLowerCase()}_${activity.athlete.lastname.toLowerCase()}`,
+            profile: activity.athlete.profile_medium || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.athlete.firstname + '+' + activity.athlete.lastname)}&background=fc4c02&color=fff&size=128`
+          });
+        }
+      }
+    });
+    
+    console.log('Unique athletes found:', uniqueAthletes.size);
+    
+    // Filtrer pour Charles, Philippe et Jonathan
+    const targetAthletes = Array.from(uniqueAthletes.values()).filter(athlete => 
+      (athlete.firstname === 'Charles' && athlete.lastname === 'R.') ||
+      (athlete.firstname === 'Philippe' && athlete.lastname === 'D.') ||
+      (athlete.firstname === 'Jonathan' && athlete.lastname === 'B.')
+    );
+    
+    console.log('Target athletes:', targetAthletes.map(a => `${a.firstname} ${a.lastname}`));
+    
+    // Calculer les stats pour chaque athlète
+    membersStats = targetAthletes.map(athlete => {
+      const athleteName = `${athlete.firstname} ${athlete.lastname}`;
+      const stats = calculateStats(allCommunalActivities, athleteName);
+      
+      return {
+        ...athlete,
+        stats
+      };
+    });
+    
+    // Tri des membres
+    membersStats.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'name':
+          aValue = `${a.firstname} ${a.lastname}`.toLowerCase();
+          bValue = `${b.firstname} ${b.lastname}`.toLowerCase();
+          break;
+        case 'distance':
+          aValue = a.stats[period].distance;
+          bValue = b.stats[period].distance;
+          break;
+        case 'time':
+          aValue = a.stats[period].movingTime;
+          bValue = b.stats[period].movingTime;
+          break;
+        case 'calories':
+          aValue = a.stats[period].calories;
+          bValue = b.stats[period].calories;
+          break;
+        case 'elevation':
+          aValue = a.stats[period].elevationGain;
+          bValue = b.stats[period].elevationGain;
+          break;
+        default:
+          aValue = `${a.firstname} ${a.lastname}`.toLowerCase();
+          bValue = `${b.firstname} ${b.lastname}`.toLowerCase();
+      }
+      
+      if (sortOrder === 'desc') {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      } else {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      }
+    });
+    
+    return membersStats;
+  } catch (err) {
+    console.error('Error in fetchMembersData:', err);
+    return [];
   }
-  
-  const members = await strava.getClubMembers(clubId, session.accessToken);
-  console.log('Club members:', members.length, 'members');
-  console.log('First member structure:', JSON.stringify(members[0], null, 2));
-  
-  membersStats = members.map(member => {
-    const memberName = `${member.firstname} ${member.lastname}`;
-    const stats = calculateStats(activities, memberName);
-    console.log(`Stats for ${memberName}:`, stats);
-    return {
-      ...member,
-      stats
-    };
-  });
-  console.log('=== Members page data fetch completed ===');
-  
-  // Tri des membres
-  membersStats.sort((a, b) => {
-    let aValue, bValue;
-    
-    switch (sortBy) {
-      case 'name':
-        aValue = `${a.firstname} ${a.lastname}`.toLowerCase();
-        bValue = `${b.firstname} ${b.lastname}`.toLowerCase();
-        break;
-      case 'distance':
-        aValue = a.stats[period].distance;
-        bValue = b.stats[period].distance;
-        break;
-      case 'time':
-        aValue = a.stats[period].movingTime;
-        bValue = b.stats[period].movingTime;
-        break;
-      case 'calories':
-        aValue = a.stats[period].calories;
-        bValue = b.stats[period].calories;
-        break;
-      case 'elevation':
-        aValue = a.stats[period].elevationGain;
-        bValue = b.stats[period].elevationGain;
-        break;
-      default:
-        aValue = `${a.firstname} ${a.lastname}`.toLowerCase();
-        bValue = `${b.firstname} ${b.lastname}`.toLowerCase();
-    }
-    
-    if (sortOrder === 'desc') {
-      return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-    } else {
-      return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-    }
-  });
-} catch (err) {
-  error = err.message;
-  console.error('Error fetching member stats:', err);
 }
+
+// Appeler la fonction principale
+membersStats = await fetchMembersData();
 ---
 
 <Layout title="Statistiques des membres - Strava Club Tracker">
@@ -223,7 +258,7 @@ try {
                             <div class="flex-shrink-0 h-10 w-10">
                               <img 
                                 class="h-10 w-10 rounded-full" 
-                                src={member.profile_medium} 
+                                src={member.profile} 
                                 alt={`${member.firstname} ${member.lastname}`}
                               />
                             </div>

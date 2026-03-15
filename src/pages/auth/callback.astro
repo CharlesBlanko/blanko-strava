@@ -1,6 +1,8 @@
 ---
+import Layout from '../../layouts/Layout.astro';
 import { StravaAPI } from '../../lib/strava';
 import { SessionManager } from '../../lib/session';
+import { addActivities, hasNewActivities } from '../../lib/database';
 
 const strava = new StravaAPI();
 const url = new URL(Astro.request.url);
@@ -47,6 +49,25 @@ try {
     athlete: tokenData.athlete,
     isClubMember: finalIsClubMember
   });
+
+  // Synchroniser les activités de l'athlète connecté
+  try {
+    console.log('Syncing activities for athlete:', tokenData.athlete.id);
+    const athleteActivities = await strava.getAthleteActivities(tokenData.access_token);
+    const memberId = tokenData.athlete.id.toString();
+    
+    if (hasNewActivities(memberId, athleteActivities)) {
+      console.log('New activities found, updating local database');
+      addActivities(memberId, athleteActivities);
+    } else {
+      console.log('No new activities, keeping existing data');
+      // S'assurer que les activités existent en base locale
+      const existingActivities = await strava.getAthleteActivities(tokenData.access_token);
+      addActivities(memberId, existingActivities);
+    }
+  } catch (error) {
+    console.error('Error syncing activities:', error);
+  }
 
   return new Response(null, {
     status: 302,

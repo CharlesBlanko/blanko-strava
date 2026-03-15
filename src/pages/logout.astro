@@ -1,5 +1,5 @@
 ---
-import { SessionManager } from '../../lib/session';
+import { SessionManager } from '../lib/session';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');

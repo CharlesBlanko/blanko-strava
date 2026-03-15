@@ -214,4 +214,19 @@ export class StravaAPI {
       return false;
     }
   }
+
+  // Récupérer les détails d'un athlète (incluant la photo de profil)
+  async getAthleteDetails(athleteId: number, accessToken: string): Promise<any> {
+    const response = await fetch(`https://www.strava.com/api/v3/athletes/${athleteId}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch athlete details: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }

@@ -6,6 +6,33 @@ export interface SessionData {
   isClubMember: boolean;
 }
 
+// Cache simple pour les données API
+const apiCache = new Map();
+
+export function getCachedData(key: string): any | null {
+  const cached = apiCache.get(key);
+  if (!cached) return null;
+  
+  // Cache valide pendant 30 minutes
+  if (Date.now() - cached.timestamp > 30 * 60 * 1000) {
+    apiCache.delete(key);
+    return null;
+  }
+  
+  return cached.data;
+}
+
+export function setCachedData(key: string, data: any): void {
+  apiCache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+}
+
+export function clearCache(): void {
+  apiCache.clear();
+}
+
 export class SessionManager {
   private static sessions = new Map<string, SessionData>();
 

@@ -35,20 +35,28 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Strava Club Tracker</h1>
+            <a href="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600">
+              Strava Club Tracker
+            </a>
             <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
               Club Blanko
             </span>
           </div>
           {session ? (
             <div class="flex items-center space-x-4">
-              <span class="text-sm text-gray-600">
-                Connecté en tant que {athleteName}
-              </span>
+              <form action="/sync" method="post">
+                <button 
+                  type="submit"
+                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  onclick="console.log('Sync button clicked')"
+                >
+                  🔄 Synchroniser les activités
+                </button>
+              </form>
               <form action="/logout" method="post">
                 <button 
                   type="submit"
-                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
                   Déconnexion
                 </button>
@@ -113,14 +121,28 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
             </div>
           </div>
           
-          <form action="/logout" method="post">
-            <button 
-              type="submit"
-              class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Se déconnecter
-            </button>
-          </form>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <form action="/logout" method="post">
+              <button 
+                type="submit"
+                class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                Déconnexion
+              </button>
+            </form>
+            
+            {session && (
+              <form action="/sync" method="post">
+                <button 
+                  type="submit"
+                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  onclick="console.log('Sync button clicked')"
+                >
+                  🔄 Synchroniser les activités
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       ) : (
         <div>
