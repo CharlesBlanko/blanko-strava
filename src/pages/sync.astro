@@ -51,7 +51,9 @@ try {
       firstname: session.athlete.firstname,
       lastname: session.athlete.lastname,
       username: session.athlete.username || `${session.athlete.firstname.toLowerCase()}_${session.athlete.lastname.toLowerCase()}`,
-      profile_medium: session.athlete.profile
+      profile_medium: session.athlete.profile && session.athlete.profile.startsWith('http')
+        ? session.athlete.profile
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(session.athlete.firstname + '+' + session.athlete.lastname)}&background=fc4c02&color=fff&size=128`
     }
   }));
   

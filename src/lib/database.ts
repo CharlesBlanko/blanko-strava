@@ -38,7 +38,7 @@ function loadDatabase(): CommunalDatabase {
           !activity.athlete || !activity.athlete.firstname || !activity.athlete.lastname
         );
         
-        if (hasIncompleteAthleteInfo) {
+        /*if (hasIncompleteAthleteInfo) {
           console.log('Enriching existing activities with athlete information...');
           // Pour l'instant, on suppose que toutes les activités existantes sont de Charles
           parsed.activities = parsed.activities.map(activity => ({
@@ -48,13 +48,15 @@ function loadDatabase(): CommunalDatabase {
               firstname: activity.athlete?.firstname || 'Charles',
               lastname: activity.athlete?.lastname || 'R.',
               username: activity.athlete?.username || 'charles_r',
-              profile_medium: activity.athlete?.profile_medium || `https://ui-avatars.com/api/?name=Charles+R.&background=fc4c02&color=fff&size=128`
+              profile_medium: activity.athlete?.profile_medium && activity.athlete.profile_medium.startsWith('http') 
+                ? activity.athlete.profile_medium 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent((activity.athlete?.firstname || 'Charles') + '+' + (activity.athlete?.lastname || 'R.'))}&background=fc4c02&color=fff&size=128`
             }
           }));
           
           // Sauvegarder les données enrichies
           saveDatabase(parsed);
-        }
+        }*/
       }
       
       console.log('Database loaded from file:', parsed.activities?.length || 0, 'activities');

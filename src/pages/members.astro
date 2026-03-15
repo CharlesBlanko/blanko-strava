@@ -68,7 +68,9 @@ async function fetchMembersData() {
             firstname: activity.athlete.firstname,
             lastname: activity.athlete.lastname,
             username: activity.athlete.username || `${activity.athlete.firstname.toLowerCase()}_${activity.athlete.lastname.toLowerCase()}`,
-            profile: activity.athlete.profile_medium || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.athlete.firstname + '+' + activity.athlete.lastname)}&background=fc4c02&color=fff&size=128`
+            profile: activity.athlete.profile_medium && activity.athlete.profile_medium.startsWith('http') 
+              ? activity.athlete.profile_medium 
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.athlete.firstname + '+' + activity.athlete.lastname)}&background=fc4c02&color=fff&size=128`
           });
         }
       }
@@ -76,14 +78,10 @@ async function fetchMembersData() {
     
     console.log('Unique athletes found:', uniqueAthletes.size);
     
-    // Filtrer pour Charles, Philippe et Jonathan
-    const targetAthletes = Array.from(uniqueAthletes.values()).filter(athlete => 
-      (athlete.firstname === 'Charles' && athlete.lastname === 'R.') ||
-      (athlete.firstname === 'Philippe' && athlete.lastname === 'D.') ||
-      (athlete.firstname === 'Jonathan' && athlete.lastname === 'B.')
-    );
+    // Prendre tous les athlètes uniques (plus de filtre)
+    const targetAthletes = Array.from(uniqueAthletes.values());
     
-    console.log('Target athletes:', targetAthletes.map(a => `${a.firstname} ${a.lastname}`));
+    console.log('All athletes to display:', targetAthletes.map(a => `${a.firstname} ${a.lastname}`));
     
     // Calculer les stats pour chaque athlète
     membersStats = targetAthletes.map(athlete => {
