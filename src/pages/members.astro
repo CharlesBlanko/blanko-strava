@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCommunalActivities, getAthletes } from '../lib/database-optimized';
+import { getCommunalActivities, getAthletes } from '../lib/database';
 import { calculateStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
 import { SessionManager, getCachedData, setCachedData } from '../lib/session';
 import { StravaAPI } from '../lib/strava';

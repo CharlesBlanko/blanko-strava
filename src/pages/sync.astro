@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { SessionManager } from '../lib/session';
 import { StravaAPI } from '../lib/strava';
-import { getCommunalActivities, addActivitiesToCommunal } from '../lib/database-optimized';
+import { getCommunalActivities, addActivitiesToCommunal } from '../lib/database';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');
