@@ -1,25 +1,26 @@
 ---
-// Composant Header réutilisable pour les pages authentifiées
+import ThemeToggle from './ThemeToggle.astro';
 ---
-<header class="bg-white shadow-sm border-b">
+<header class="bg-white shadow-sm border-b dark:bg-gray-900 dark:border-gray-800">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
       <div class="flex items-center">
-        <a href="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600">
+        <a href="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-400">
           Strava Club Tracker
         </a>
-        <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
+        <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full dark:text-orange-400 dark:bg-orange-900">
           Club Blanko
         </span>
       </div>
       <div class="flex items-center space-x-4">
-        <a href="/" class="text-sm text-gray-600 hover:text-gray-900">
+        <ThemeToggle />
+        <a href="/" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
           Retour à l'accueil
         </a>
         <form action="/logout" method="post">
           <button 
             type="submit"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             Déconnexion
           </button>

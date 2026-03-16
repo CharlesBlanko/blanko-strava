@@ -31,22 +31,22 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
 ---
 
 <Layout title="Strava Club Tracker">
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <Header />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {!session ? (
         <div class="text-center py-12">
           <div class="mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-              <svg class="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4 dark:bg-orange-900">
+              <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M15.384 0C13.643 0 12.2 1.343 12.2 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM8.616 0C6.875 0 5.432 1.343 5.432 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12S0 5.373 0 12s5.373 12 12 12z"/>
               </svg>
             </div>
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4 dark:text-white">
               Bienvenue sur le tracker du Club Blanko
             </h2>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8 dark:text-gray-300">
               Connectez-vous avec votre compte Strava pour accéder aux statistiques détaillées du club.
               Seuls les membres du club peuvent voir les données.
             </p>
@@ -54,7 +54,7 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
           
           <a 
             href={strava.getAuthUrl()}
-            class="inline-flex items-center px-6 py-3 text-lg font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            class="inline-flex items-center px-6 py-3 text-lg font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:bg-orange-500 dark:hover:bg-orange-600"
           >
             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M15.384 0C13.643 0 12.2 1.343 12.2 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM8.616 0C6.875 0 5.432 1.343 5.432 3v6c0 1.657 1.443 3 3.184 3s3.184-1.343 3.184-3V3c0-1.657-1.443-3-3.184-3zM12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12S0 5.373 0 12s5.373 12 12 12z"/>
@@ -65,14 +65,14 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
       ) : !isClubMember ? (
         <div class="text-center py-12">
           <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4 dark:text-white">
               Accès non autorisé
             </h2>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8 dark:text-gray-300">
               Vous n'êtes pas membre du Club Blanko. Seuls les membres du club peuvent accéder aux statistiques.
             </p>
-            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
-              <p class="text-sm text-yellow-800">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4 dark:bg-yellow-900 dark:border-yellow-700">
+              <p class="text-sm text-yellow-800 dark:text-yellow-200">
                 <strong>Debug info:</strong><br/>
                 Session ID: {sessionId}<br/>
                 Session exists: {session ? 'Oui' : 'Non'}<br/>
@@ -85,7 +85,7 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
             <form action="/logout" method="post">
               <button 
                 type="submit"
-                class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
               >
                 Déconnexion
               </button>
@@ -95,7 +95,7 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
               <form action="/sync" method="post">
                 <button 
                   type="submit"
-                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:bg-orange-900 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-800"
                   onclick="console.log('Sync button clicked')"
                 >
                   🔄 Synchroniser les activités
@@ -107,40 +107,40 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
       ) : (
         <div>
           <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 dark:text-white">
               Tableau de bord du Club Blanko
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <a 
                 href="/members"
-                class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700"
               >
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                   </div>
                   <div class="ml-4">
-                    <h3 class="text-lg font-medium text-gray-900">Statistiques des membres</h3>
-                    <p class="text-sm text-gray-500">Voir les statistiques individuelles</p>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Statistiques des membres</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Voir les statistiques individuelles</p>
                   </div>
                 </div>
               </a>
               
               <a 
                 href="/group"
-                class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700"
               >
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                   </div>
                   <div class="ml-4">
-                    <h3 class="text-lg font-medium text-gray-900">Statistiques du groupe</h3>
-                    <p class="text-sm text-gray-500">Voir les statistiques cumulatives</p>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Statistiques du groupe</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Voir les statistiques cumulatives</p>
                   </div>
                 </div>
               </a>
@@ -150,7 +150,7 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
               <form action="/sync" method="post">
                 <button 
                   type="submit"
-                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:bg-orange-900 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-800"
                   onclick="console.log('Sync button clicked')"
                 >
                   🔄 Synchroniser les activités

@@ -1,0 +1,123 @@
+---
+// Composant Toggle pour changer entre thème light et dark
+---
+<button
+  id="theme-toggle"
+  class="p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+  aria-label="Toggle theme"
+>
+  <div class="relative w-6 h-6">
+    <!-- Icône soleil (light) -->
+    <svg
+      id="theme-sun"
+      class="absolute inset-0 w-6 h-6 transition-opacity"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+      />
+    </svg>
+    <!-- Icône lune (dark) -->
+    <svg
+      id="theme-moon"
+      class="absolute inset-0 w-6 h-6 transition-opacity"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+      />
+    </svg>
+  </div>
+</button>
+
+<script>
+  (function() {
+    // Fonction pour mettre à jour les icônes
+    function updateIcons(isDark) {
+      const sunIcon = document.getElementById('theme-sun');
+      const moonIcon = document.getElementById('theme-moon');
+      
+      if (sunIcon && moonIcon) {
+        if (isDark) {
+          sunIcon.style.opacity = '0';
+          moonIcon.style.opacity = '1';
+        } else {
+          sunIcon.style.opacity = '1';
+          moonIcon.style.opacity = '0';
+        }
+      }
+    }
+    
+    // Fonction d'initialisation du thème
+    function initTheme() {
+      const theme = localStorage.getItem('theme');
+      const html = document.documentElement;
+      
+      // Appliquer le thème sauvegardé
+      if (theme === 'dark') {
+        html.classList.add('dark');
+      } else if (theme === 'light') {
+        html.classList.remove('dark');
+      } else {
+        // Si pas de thème sauvegardé, utiliser les préférences système
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          html.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          html.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        }
+      }
+      
+      // Mettre à jour les icônes
+      updateIcons(html.classList.contains('dark'));
+    }
+    
+    // Fonction de basculement
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      
+      if (isDark) {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      
+      // Mettre à jour les icônes
+      updateIcons(!isDark);
+    }
+    
+    // Initialiser quand le DOM est prêt
+    function ready() {
+      // Initialiser le thème
+      initTheme();
+      
+      // Attacher l'événement au bouton
+      const toggleButton = document.getElementById('theme-toggle');
+      if (toggleButton) {
+        toggleButton.addEventListener('click', toggleTheme);
+      }
+    }
+    
+    // Attendre que le DOM soit chargé
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', ready);
+    } else {
+      ready();
+    }
+  })();
+</script>
