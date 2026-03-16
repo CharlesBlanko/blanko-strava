@@ -6,6 +6,11 @@ export interface AthleteStats {
     movingTime: number;
     elevationGain: number;
   };
+  lastWeek: {
+    distance: number;
+    movingTime: number;
+    elevationGain: number;
+  };
   monthly: {
     distance: number;
     movingTime: number;
@@ -25,6 +30,12 @@ export interface AthleteStats {
 
 export interface GroupStats {
   weekly: {
+    distance: number;
+    movingTime: number;
+    elevationGain: number;
+    memberCount: number;
+  };
+  lastWeek: {
     distance: number;
     movingTime: number;
     elevationGain: number;
@@ -85,11 +96,20 @@ export function getDateRanges() {
   weekStart.setDate(now.getDate() - diff);
   weekStart.setHours(0, 0, 0, 0);
 
+  // Calcul de la semaine passée (semaine précédente)
+  const lastWeekStart = new Date(weekStart);
+  lastWeekStart.setDate(weekStart.getDate() - 7); // Reculer de 7 jours pour commencer la semaine passée
+  const lastWeekEnd = new Date(weekStart);
+  lastWeekEnd.setDate(weekStart.getDate() - 1); // Fin de la semaine passée = veille de cette semaine
+  lastWeekEnd.setHours(23, 59, 59, 999);
+
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const yearStart = new Date(now.getFullYear(), 0, 1);
 
   return {
     weekStart,
+    lastWeekStart,
+    lastWeekEnd,
     monthStart,
     yearStart
   };
@@ -100,10 +120,14 @@ export function calculateStats(activities: any[], athleteName: string): AthleteS
   const hasDates = activities.length > 0 && activities[0].start_date;
   
   if (hasDates) {
-    const { weekStart, monthStart, yearStart } = getDateRanges();
+    const { weekStart, lastWeekStart, lastWeekEnd, monthStart, yearStart } = getDateRanges();
     
     // Filtrer par période (les activités sont déjà filtrées par athlète)
     const weekly = activities.filter(a => new Date(a.start_date) >= weekStart);
+    const lastWeek = activities.filter(a => {
+      const activityDate = new Date(a.start_date);
+      return activityDate >= lastWeekStart && activityDate <= lastWeekEnd;
+    });
     const monthly = activities.filter(a => new Date(a.start_date) >= monthStart);
     const yearly = activities.filter(a => new Date(a.start_date) >= yearStart);
     const allTime = activities;
@@ -112,6 +136,7 @@ export function calculateStats(activities: any[], athleteName: string): AthleteS
       athleteId: 0,
       name: athleteName,
       weekly: sumActivities(weekly),
+      lastWeek: sumActivities(lastWeek),
       monthly: sumActivities(monthly),
       yearly: sumActivities(yearly),
       allTime: sumActivities(allTime)
@@ -124,6 +149,7 @@ export function calculateStats(activities: any[], athleteName: string): AthleteS
       athleteId: 0,
       name: athleteName,
       weekly: stats, // Mêmes stats pour toutes les périodes
+      lastWeek: stats,
       monthly: stats,
       yearly: stats,
       allTime: stats
@@ -132,9 +158,13 @@ export function calculateStats(activities: any[], athleteName: string): AthleteS
 }
 
 export function calculateGroupStats(activities: any[]): GroupStats {
-  const { weekStart, monthStart, yearStart } = getDateRanges();
+  const { weekStart, lastWeekStart, lastWeekEnd, monthStart, yearStart } = getDateRanges();
   
   const weekly = activities.filter(a => new Date(a.start_date) >= weekStart);
+  const lastWeek = activities.filter(a => {
+    const activityDate = new Date(a.start_date);
+    return activityDate >= lastWeekStart && activityDate <= lastWeekEnd;
+  });
   const monthly = activities.filter(a => new Date(a.start_date) >= monthStart);
   const yearly = activities.filter(a => new Date(a.start_date) >= yearStart);
   const allTime = activities;
@@ -155,6 +185,10 @@ export function calculateGroupStats(activities: any[]): GroupStats {
     weekly: {
       ...sumActivities(weekly),
       memberCount: getUniqueAthletes(weekly)
+    },
+    lastWeek: {
+      ...sumActivities(lastWeek),
+      memberCount: getUniqueAthletes(lastWeek)
     },
     monthly: {
       ...sumActivities(monthly),

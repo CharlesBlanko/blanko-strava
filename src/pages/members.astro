@@ -169,6 +169,7 @@ membersStats = await fetchMembersData();
               class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-gray-900"
               onchange="window.location.href = `/members?period=${this.value}`"
             >
+              <option value="lastWeek" selected={period === 'lastWeek'}>La semaine passée</option>
               <option value="weekly" selected={period === 'weekly'}>Cette semaine</option>
               <option value="monthly" selected={period === 'monthly'}>Ce mois</option>
               <option value="yearly" selected={period === 'yearly'}>Cette année</option>
