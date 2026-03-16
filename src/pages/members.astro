@@ -125,10 +125,6 @@ async function fetchMembersData() {
           aValue = a.stats[period].movingTime;
           bValue = b.stats[period].movingTime;
           break;
-        case 'calories':
-          aValue = a.stats[period].calories;
-          bValue = b.stats[period].calories;
-          break;
         case 'elevation':
           aValue = a.stats[period].elevationGain;
           bValue = b.stats[period].elevationGain;
@@ -247,12 +243,6 @@ membersStats = await fetchMembersData();
                       </a>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <a href={getSortUrl('calories')} class="hover:text-orange-600 flex items-center">
-                        Calories
-                        <span class="ml-1">{getSortIcon('calories')}</span>
-                      </a>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <a href={getSortUrl('elevation')} class="hover:text-orange-600 flex items-center">
                         Dénivelé positif
                         <span class="ml-1">{getSortIcon('elevation')}</span>
@@ -289,9 +279,6 @@ membersStats = await fetchMembersData();
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatTime(stats.movingTime)}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {stats.calories.toLocaleString()} kcal
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatElevation(stats.elevationGain)}

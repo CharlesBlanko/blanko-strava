@@ -4,25 +4,21 @@ export interface AthleteStats {
   weekly: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
   };
   monthly: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
   };
   yearly: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
   };
   allTime: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
   };
 }
@@ -31,28 +27,24 @@ export interface GroupStats {
   weekly: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
     memberCount: number;
   };
   monthly: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
     memberCount: number;
   };
   yearly: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
     memberCount: number;
   };
   allTime: {
     distance: number;
     movingTime: number;
-    calories: number;
     elevationGain: number;
     memberCount: number;
   };
@@ -183,7 +175,6 @@ function sumActivities(activities: any[]) {
   return {
     distance: activities.reduce((sum, a) => sum + (a.distance || 0), 0),
     movingTime: activities.reduce((sum, a) => sum + (a.moving_time || 0), 0),
-    calories: activities.reduce((sum, a) => sum + (a.calories || 0), 0),
     elevationGain: activities.reduce((sum, a) => sum + (a.total_elevation_gain || 0), 0)
   };
 }
