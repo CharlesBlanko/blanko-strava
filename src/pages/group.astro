@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
 import { getCommunalActivities } from '../lib/database';
 import { calculateGroupStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
 import { SessionManager } from '../lib/session';
@@ -49,33 +50,7 @@ try {
 
 <Layout title="Statistiques du groupe - Strava Club Tracker">
   <div class="min-h-screen bg-gray-50">
-    <header class="bg-white shadow-sm border-b">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
-            <a href="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600">
-              Strava Club Tracker
-            </a>
-            <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
-              Club Blanko
-            </span>
-          </div>
-          <div class="flex items-center space-x-4">
-            <a href="/" class="text-sm text-gray-600 hover:text-gray-900">
-              Retour à l'accueil
-            </a>
-            <form action="/logout" method="post">
-              <button 
-                type="submit"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                Déconnexion
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </header>
+    <Header />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="mb-8">

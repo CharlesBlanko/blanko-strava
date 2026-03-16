@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
 import { StravaAPI } from '../lib/strava';
 import { SessionManager } from '../lib/session';
 
@@ -31,48 +32,7 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
 
 <Layout title="Strava Club Tracker">
   <div class="min-h-screen bg-gray-50">
-    <header class="bg-white shadow-sm border-b">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
-            <a href="/" class="text-2xl font-bold text-gray-900 hover:text-orange-600">
-              Strava Club Tracker
-            </a>
-            <span class="ml-4 px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
-              Club Blanko
-            </span>
-          </div>
-          {session ? (
-            <div class="flex items-center space-x-4">
-              <form action="/sync" method="post">
-                <button 
-                  type="submit"
-                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                  onclick="console.log('Sync button clicked')"
-                >
-                  🔄 Synchroniser les activités
-                </button>
-              </form>
-              <form action="/logout" method="post">
-                <button 
-                  type="submit"
-                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                >
-                  Déconnexion
-                </button>
-              </form>
-            </div>
-          ) : (
-            <a 
-              href={strava.getAuthUrl()}
-              class="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Connexion Strava
-            </a>
-          )}
-        </div>
-      </div>
-    </header>
+    <Header />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {!session ? (
@@ -198,6 +158,18 @@ if (session && !SessionManager.isTokenExpired(sessionId)) {
                   </div>
                 </div>
               </div>
+            </div>
+            
+            <div class="mt-6">
+              <form action="/sync" method="post">
+                <button 
+                  type="submit"
+                  class="inline-flex items-center px-6 py-3 text-lg font-medium text-orange-600 bg-orange-100 border border-orange-300 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  onclick="console.log('Sync button clicked')"
+                >
+                  🔄 Synchroniser les activités
+                </button>
+              </form>
             </div>
           </div>
         </div>
