@@ -4,7 +4,6 @@ import Header from '../components/Header.astro';
 import { getCommunalActivities, getAthletes } from '../lib/database';
 import { calculateStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
 import { SessionManager, getCachedData, setCachedData } from '../lib/session';
-import { StravaAPI } from '../lib/strava';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');
@@ -36,8 +35,6 @@ function getSortIcon(column: string): string {
   if (sortBy !== column) return '';
   return sortOrder === 'asc' ? '↑' : '↓';
 }
-
-const strava = new StravaAPI();
 
 let membersStats = [];
 let error = null;

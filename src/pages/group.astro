@@ -23,8 +23,6 @@ if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMembe
 const url = new URL(Astro.request.url);
 const period = url.searchParams.get('period') || 'allTime';
 
-const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
-
 let groupStats = null;
 let error = null;
 

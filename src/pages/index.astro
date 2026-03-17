@@ -19,11 +19,9 @@ console.log('Session ID from cookie:', sessionId);
 const session = sessionId ? SessionManager.getSession(sessionId) : null;
 console.log('Session data:', session);
 let isClubMember = false;
-let athleteName = '';
 
 if (session && !SessionManager.isTokenExpired(sessionId)) {
   isClubMember = session.isClubMember;
-  athleteName = `${session.athlete.firstname} ${session.athlete.lastname}`;
   console.log('User is club member:', isClubMember);
 } else {
   console.log('No valid session found');

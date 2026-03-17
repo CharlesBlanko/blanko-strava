@@ -59,7 +59,7 @@ try {
   
   if (enrichedActivities.length > 0) {
     console.log('Adding enriched activities to communal database...');
-    addActivitiesToCommunal(clubId, enrichedActivities);
+    addActivitiesToCommunal(enrichedActivities);
     syncStatus = `✅ ${enrichedActivities.length} nouvelles activités ajoutées à la base commune`;
   } else {
     console.log('No new activities found');
