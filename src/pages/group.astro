@@ -32,7 +32,7 @@ try {
   console.log('=== Starting group page data fetch ===');
   
   // Récupérer toutes les activités de la base commune
-  const activities = getCommunalActivities(clubId);
+  const activities = getCommunalActivities();
   console.log('Communal activities found:', activities.length);
   
   if (activities.length > 0) {

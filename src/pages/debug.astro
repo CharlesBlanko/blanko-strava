@@ -20,7 +20,7 @@ if (!session || SessionManager.isTokenExpired(sessionId) || !session.isClubMembe
 }
 
 const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
-const activities = getCommunalActivities(clubId);
+const activities = getCommunalActivities();
 const dbInfo = getDatabaseInfo();
 ---
 

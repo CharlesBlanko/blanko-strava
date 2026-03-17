@@ -145,13 +145,13 @@ function addOrUpdateAthlete(athlete: Athlete): void {
 }
 
 // Fonctions publiques
-export function getCommunalActivities(clubId: string): OptimizedActivity[] {
+export function getCommunalActivities(): OptimizedActivity[] {
   const db = loadOptimizedDatabase();
   console.log('Loading optimized activities:', db.activities?.length || 0, 'activities');
   return db.activities || [];
 }
 
-export function addActivitiesToCommunal(clubId: string, newActivities: any[]): void {
+export function addActivitiesToCommunal(newActivities: any[]): void {
   console.log('=== addActivitiesToCommunal called ===');
   console.log('New activities to add:', newActivities.length);
   

@@ -38,7 +38,6 @@ function getSortIcon(column: string): string {
 }
 
 const strava = new StravaAPI();
-const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
 
 let membersStats = [];
 let error = null;
@@ -49,8 +48,7 @@ async function fetchMembersData() {
     console.log('=== Starting members page data fetch ===');
     
     // Récupérer toutes les activités et les athlètes
-    const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
-    const allCommunalActivities = getCommunalActivities(clubId);
+    const allCommunalActivities = getCommunalActivities();
     const athletes = getAthletes();
     console.log('Communal activities found:', allCommunalActivities.length);
     console.log('Athletes found:', athletes.length);

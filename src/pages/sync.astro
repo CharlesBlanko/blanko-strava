@@ -33,8 +33,7 @@ try {
   console.log('Current activities from API:', currentActivities.length);
   
   // Récupérer les activités stockées dans la base commune
-  const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
-  const storedActivities = getCommunalActivities(clubId);
+  const storedActivities = getCommunalActivities();
   console.log('Stored communal activities:', storedActivities.length);
   
   // Détecter les nouvelles activités
