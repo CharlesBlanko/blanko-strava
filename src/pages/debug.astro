@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import { getCommunalActivities, getDatabaseInfo, exportDatabase, clearDatabase } from '../lib/database';
+import { getCommunalActivities, getDatabaseInfo, exportDatabase, clearDatabase, getAthleteById } from '../lib/database';
 import { SessionManager } from '../lib/session';
 
 function getSessionId(request: Request): string | null {
@@ -89,7 +89,10 @@ const dbInfo = getDatabaseInfo();
                         {activity.id}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {activity.athlete ? `${activity.athlete.firstname} ${activity.athlete.lastname}` : 'Unknown'}
+                        {(() => {
+                          const athlete = getAthleteById(activity.athlete_id);
+                          return athlete ? `${athlete.firstname} ${athlete.lastname}` : 'Unknown';
+                        })()}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {activity.name || 'Sans nom'}

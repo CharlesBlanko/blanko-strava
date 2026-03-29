@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import { getCommunalActivities, getAthletes } from '../lib/database';
 import { calculateStats, formatDistance, formatTime, formatElevation } from '../lib/utils';
-import { SessionManager, getCachedData, setCachedData } from '../lib/session';
+import { SessionManager } from '../lib/session';
 
 function getSessionId(request: Request): string | null {
   const cookies = request.headers.get('cookie');
@@ -45,6 +45,7 @@ async function fetchMembersData() {
     console.log('=== Starting members page data fetch ===');
     
     // Récupérer toutes les activités et les athlètes
+    const clubId = import.meta.env.STRAVA_CLUB_ID || '1452985';
     const allCommunalActivities = getCommunalActivities();
     const athletes = getAthletes();
     console.log('Communal activities found:', allCommunalActivities.length);
